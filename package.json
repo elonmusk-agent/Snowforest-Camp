@@ -1,0 +1,24 @@
+{
+  "name": "snowforest-mp",
+  "version": "1.0.0",
+  "description": "一款正在开发的单机网页塔防游戏，参考 Warcraft III RPG 地图 **Troll vs. Elves v4.7 B5.5** 的建家、防守与经济成长机制，使用原创雪林场景和角色素材。",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elonmusk-agent/Snowforest-Camp.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/elonmusk-agent/Snowforest-Camp/issues"
+  },
+  "homepage": "https://github.com/elonmusk-agent/Snowforest-Camp#readme",
+  "dependencies": {
+    "ws": "^8.22.1"
+  }
+}
