@@ -10,7 +10,13 @@ const serverUrl = qs.get('server') ?? ((location.protocol === 'https:' ? 'wss://
 let ws = null, myToken = sessionStorage.getItem('sf_token') ?? '', myPid = null, roomCode = qs.get('room') ?? '', myName = sessionStorage.getItem('sf_name') ?? '', myFaction = null;
 let itemDb = {}, shops = { elf: [], troll: [] };
 let seq = 0, ping = 0, lastPong = 0, alive = false;
-const cmd = (action, ...args) => { if (ws?.readyState === 1) ws.send(JSON.stringify({ type: 'cmd', seq: ++seq, action, args })); };
+const cmd = (action, ...args) => {
+  if (ws?.readyState !== 1) return;
+  const payload = JSON.stringify({ type: 'cmd', seq: ++seq, action, args });
+  if (window._stats) { window._stats.bytesOut += payload.length; window._stats.cmds++; }
+  ws.send(payload);
+};
+window._stats = { snaps: 0, bytesIn: 0, bytesOut: 0, cmds: 0, events: 0 };
 
 // ---------- 音效 ----------
 let audioOn = localStorage.getItem('sf_sound') === '1', audioCtx = null;
@@ -38,7 +44,10 @@ function connect(isReconnect = false) {
     if (!window._pingTimer) window._pingTimer = setInterval(() => { if (ws.readyState === 1) { ws.send(JSON.stringify({ type: 'ping', t: performance.now() })); if (lastPong && performance.now() - lastPong > 15000) markDead(); } }, 5000);
   };
   ws.onmessage = e => {
+    if (window._stats) { window._stats.bytesIn += e.data.length; }
     const m = JSON.parse(e.data);
+    if (m.type === 'snap') { if (window._stats) window._stats.snaps++; }
+    else if (m.type === 'events' && window._stats) window._stats.events += m.list?.length ?? 0;
     if (m.type === 'pong') { lastPong = performance.now(); ping = Math.round(lastPong - m.t); $('net-pill').textContent = '延迟 ' + ping + 'ms'; return; }
     handleMsg(m);
   };

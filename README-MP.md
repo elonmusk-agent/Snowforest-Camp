@@ -22,11 +22,13 @@
 
 ```bash
 npm install          # 仅 ws 一个依赖
-node server/server.mjs           # 服务器（静态 + WS 同源 8080）
+node server/server.mjs           # 服务器（静态 + WS 同源 8080；SF_PREP/SF_MAXTIME/SF_GROWTH 可覆盖对局参数）
 node game/mp/test-mp.mjs         # 多人模拟规则测试（10 组）
 node server/test-server.mjs      # 真实 WS 双客户端联机闭环（12 项）
+node server/test-room.mjs        # 房间生命周期：房主转交/再来一局/迟到命令/多轮重开资源清理/限速（34 项）
 node server/e2e-browsers.mjs     # 双无头浏览器 E2E（10 项，需服务器运行中）
 BASE_URL=https://xxx.ngrok-free.dev node server/e2e-public.mjs   # 公网双浏览器 E2E（7 项）
+node server/perf-sample.mjs      # 60 秒性能采样：FPS/快照频率/流量（写入 /tmp/sf-perf.json）
 node game/test.mjs               # 单机回归（不变）
 ```
 
@@ -59,7 +61,8 @@ scripts/serve-*.sh       服务器与隧道运维
 
 ## 6. 已验证（详见 IMPLEMENTATION_STATUS.md）
 
-- 规则 10 组 / WS 联机 12 项 / 本机双浏览器 E2E 10 项 / 公网双浏览器 E2E 7 项 / 单机回归不变
+- 规则 10 组 / WS 联机 12 项 / 房间生命周期 34 项（房主转交·再来一局·迟到命令·多轮重开清理·限速）/ 本机双浏览器 E2E 10 项 / 公网双浏览器 E2E 7 项 / 单机回归不变
+- 性能（60 秒 CDP 采样，Apple M4 Pro + Chrome 156 headless，2 玩家 2 建筑）：双端稳态 60–62 FPS；快照 10.7/s；下行精灵 18.7KB/s、巨魔 14.7KB/s；上行约 12B/s（命令约 55B/条）
 - 公网实测：ngrok 隧道 healthz、静态页、WS 房间、双客户端对局交互全部通过
 
 ## 7. 已知问题与后续项

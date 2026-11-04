@@ -66,7 +66,12 @@ class Room {
     if (this.phase === 'playing') return '对局已在进行';
     if (!(this.seats.some(p => p.faction === 'troll') && this.seats.some(p => p.faction === 'elf'))) return '需要至少 1 名巨魔和 1 名精灵';
     const roster = this.seats.map(p => ({ pid: p.pid, name: p.name, faction: p.faction }));
-    this.match = createMatch(roster);
+    // 对局参数可用环境变量覆盖（SF_PREP/SF_MAXTIME/SF_GROWTH），默认值见 mp-sim CFG
+    this.match = createMatch(roster, {
+      ...(process.env.SF_PREP && { prepTime: Number(process.env.SF_PREP) }),
+      ...(process.env.SF_MAXTIME && { maxTime: Number(process.env.SF_MAXTIME) }),
+      ...(process.env.SF_GROWTH && { growthInterval: Number(process.env.SF_GROWTH) }),
+    });
     this.phase = 'playing';
     this.startLoop();
     return '';
@@ -83,10 +88,14 @@ class Room {
       let left = elapsed;
       while (left > 0) { const step = Math.min(left, TICK_MS); advance(s, step / 1000); left -= step; }
       tickTimeouts(s, now);
-      for (const p of this.seats) {
-        if (p.ws && p.ws.readyState === 1) {
-          const snap = snapshot(s, p.pid);
-          if (snap) send(p.ws, { type: 'snap', ...snap });
+      // 快照按 SNAP_MS(10Hz) 节流；模拟与事件保持 20Hz
+      if (now - (this.lastSnapAt ?? 0) >= SNAP_MS) {
+        this.lastSnapAt = now;
+        for (const p of this.seats) {
+          if (p.ws && p.ws.readyState === 1) {
+            const snap = snapshot(s, p.pid);
+            if (snap) send(p.ws, { type: 'snap', ...snap });
+          }
         }
       }
       sendEvents(this, s);
@@ -250,6 +259,14 @@ function handle(ws, msg) {
         case 'use': error = useItemCmd(s, mp, a[0], a[1], a[2]); break;
         case 'attack': error = trollAttackCmd(s, mp, a[0]); break;
         case 'trollSkill': error = trollSkillCmd(s, mp, a[0]); break;
+        case 'devend': {
+          // 测试专用（SF_DEV=1 时启用）：巨魔按真实死亡路径倒下，走正常胜负结算
+          if (process.env.SF_DEV !== '1') { error = '未启用'; break; }
+          if (mp.faction !== 'troll') { error = '仅巨魔会话可触发'; break; }
+          s.troll.hp = 0; s.troll.alive = false; s.troll.path = []; s.troll.order = null;
+          s.events.push({ kind: 'msg', team: 'all', text: '巨魔倒下了，精灵获胜！' });
+          break;
+        }
         default: error = '未知指令';
       }
       if (error) send(ws, { type: 'cmderr', action: msg.action, msg: error });
