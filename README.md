@@ -6,16 +6,16 @@
 
 **当前版本：单精灵、单巨魔、固定建筑基座。刷新页面或点击重置会清空本局，尚未实现存档和多人联机。**
 
-仓库：[jakiewan/Snowforest-Camp](https://github.com/jakiewan/Snowforest-Camp)
+仓库：[elonmusk-agent/Snowforest-Camp](https://github.com/elonmusk-agent/Snowforest-Camp)
 
-**公网试玩：[点击进入雪林营地](https://jakiewan.github.io/Snowforest-Camp/)**。电脑可直接打开，手机请横屏。后续推送到 `master` 的游戏变更会通过 GitHub Actions 自动部署。
+**公网试玩：[点击进入雪林营地](https://elonmusk-agent.github.io/Snowforest-Camp/)**。电脑可直接打开，手机请横屏。后续推送到 `master` 的游戏变更会通过 GitHub Actions 自动部署。
 
 ## 1. 下载并启动
 
 需要 **Python 3** 和现代浏览器。游戏使用 HTML、CSS、JavaScript 与 Canvas，启动时不需要安装 npm 依赖、数据库或后端服务。Node.js 仅用于运行模拟测试。
 
 ```bash
-git clone https://github.com/jakiewan/Snowforest-Camp.git
+git clone https://github.com/elonmusk-agent/Snowforest-Camp.git
 cd Snowforest-Camp
 python3 -m http.server 8765 --directory game --bind 127.0.0.1
 ```
