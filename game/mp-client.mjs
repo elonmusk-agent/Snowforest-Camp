@@ -65,7 +65,9 @@ $('btn-dc-exit').addEventListener('click', () => location.href = 'multi.html');
 
 // ---------- 消息处理 ----------
 let inGame = false;
+window._msgLog = [];
 function handleMsg(m) {
+  window._msgLog.push(m.type); if (window._msgLog.length > 60) window._msgLog.shift();
   switch (m.type) {
     case 'welcome': {
       myPid = m.you.pid; myToken = m.you.token; myName = m.you.name;
