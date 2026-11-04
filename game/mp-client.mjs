@@ -199,13 +199,19 @@ function drawChunk(c, ox, oy, w, h) {
     }
     c.restore();
   }
-  // 山石
+  // 山石（多面体岩块 + 顶部积雪）
   for (const r of ROCKS) {
     const x = r.x - ox, y = r.y - oy;
     if (x < -80 || y < -80 || x > w + 80 || y > h + 80) continue;
-    c.fillStyle = '#5d6d7a'; c.beginPath(); c.ellipse(x, y, r.r, r.r * .8, 0, 0, 7); c.fill();
-    c.fillStyle = '#7a8b98'; c.beginPath(); c.ellipse(x - r.r * .2, y - r.r * .25, r.r * .7, r.r * .5, 0, 0, 7); c.fill();
-    c.fillStyle = '#e8eef2dd'; c.beginPath(); c.ellipse(x - r.r * .1, y - r.r * .45, r.r * .55, r.r * .28, 0, 0, 7); c.fill();
+    c.fillStyle = '#0e1a2280';
+    c.beginPath(); c.ellipse(x, y + r.r * .45, r.r * 1.15, r.r * .4, 0, 0, 7); c.fill();
+    const pts = [[-1, .1], [-.6, -.75], [.1, -1], [.85, -.55], [1, .15], [.3, .5], [-.5, .45]];
+    c.fillStyle = '#55646f';
+    c.beginPath(); pts.forEach(([px, py], i) => { const vx = x + px * r.r, vy = y + py * r.r * .8; i ? c.lineTo(vx, vy) : c.moveTo(vx, vy); }); c.closePath(); c.fill();
+    c.fillStyle = '#6d7e8a';
+    c.beginPath(); c.moveTo(x - r.r * .6, y - r.r * .75 * .8); c.lineTo(x + r.r * .1, y - r.r * .8); c.lineTo(x + r.r * .85, y - r.r * .55 * .8); c.lineTo(x + r.r * .2, y - r.r * .1); c.lineTo(x - r.r * .5, y - r.r * .05); c.closePath(); c.fill();
+    c.fillStyle = '#e9eef2ee';
+    c.beginPath(); c.moveTo(x - r.r * .55, y - r.r * .72 * .8); c.lineTo(x + r.r * .08, y - r.r * .92); c.lineTo(x + r.r * .8, y - r.r * .6 * .8); c.lineTo(x + r.r * .3, y - r.r * .55 * .8); c.lineTo(x - r.r * .2, y - r.r * .66 * .8); c.closePath(); c.fill();
   }
   // 雪松（非行走区，密林）
   for (let y = 0; y < h; y += 26) for (let x = 0; x < w; x += 26) {
@@ -583,11 +589,26 @@ function frame(now) {
   for (const e of effects) { e.age += dt; drawEffect(e); }
   effects = effects.filter(e => e.age < (e.life ?? .7));
   ctx.restore();
-  // 迷雾（屏幕空间按世界变换绘制）
+  // 迷雾（屏幕空间按世界变换绘制，边缘柔化）
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = true;
+  ctx.filter = 'blur(' + Math.max(4, 6 * zoom) + 'px)';
   ctx.drawImage(fogCanvas, 0, 0, FW, FH, -camera.x * zoom, -camera.y * zoom, FW * 16 * zoom, FH * 16 * zoom);
+  ctx.filter = 'none';
+  ctx.restore();
+  // 营地暖光 + 巨魔营地红光（光照层，lighter 合成）
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const c of CAMPS) {
+    const x = (c.x - camera.x) * zoom, y = (c.y - camera.y) * zoom;
+    if (x < -300 || y < -300 || x > view.w + 300 || y > view.h + 300) continue;
+    if (SF.explored[c.y / 16 * FW + c.x / 16 >> 0] !== 1) continue;
+    const flick = .82 + Math.sin(now() / 260 + c.x) * .18;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 120 * zoom);
+    g.addColorStop(0, `rgba(255,168,82,${.28 * flick})`); g.addColorStop(1, 'rgba(255,140,60,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - 130 * zoom, y - 130 * zoom, 260 * zoom, 260 * zoom);
+  }
   ctx.restore();
   // 夜晚
   if (snap.night) { ctx.fillStyle = '#15235055'; ctx.fillRect(0, 0, view.w, view.h); }
@@ -727,7 +748,7 @@ function drawEffect(e) {
 // ---------- 启动 ----------
 $('nickname').value = myName;
 // 调试句柄（自动化验证用）
-window.SF = { get assetsReady() { return assetsReady; }, get snap() { return snap; }, get chunks() { return chunks; }, explored, get camera() { return camera; }, get ws() { return ws; }, get effects() { return effects; } };
+window.SF = { get assetsReady() { return assetsReady; }, get snap() { return snap; }, get chunks() { return chunks; }, explored, get camera() { return camera; }, get ws() { return ws; }, get effects() { return effects; }, cmd, get mode() { return mode; }, set mode(v) { mode = v; } };
 // ?room=XXXX&token=… 直接恢复会话（邀请链接/自动化验证用）
 if (qs.get('room') && qs.get('token')) { roomCode = qs.get('room').toUpperCase(); myToken = qs.get('token'); }
 connect(roomCode && myToken);
