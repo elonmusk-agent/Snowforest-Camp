@@ -4,20 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101b22">
-  <title>雪林防线 · 单机守卫战</title>
+  <title>Snowforest Camp · 雪林营地</title>
   <link rel="stylesheet" href="style.css?v=20261001b">
 </head>
 <body>
 <main class="game">
   <header class="topbar">
-    <div class="brand"><span class="crest">❖</span><strong>雪林营地</strong><small>单机守卫战</small></div>
+    <div class="brand"><span class="crest">❖</span><strong>Snowforest Camp</strong><small>单机守卫战</small></div>
     <div class="resources"><span class="gold-icon">●</span><b id="gold">30</b><small>金币</small><span class="wood-icon">◆</span><b id="wood">0</b><small>木材 <i id="wood-rate">0/秒</i></small><span class="income"><b id="income">+0</b> / 秒</span></div>
     <span class="mana-label">魔法 <b id="mana">200</b></span><span class="clock" id="clock">00:00</span>
     <nav class="tools" aria-label="场景控制"><button id="speed">速度 ×1</button><button id="pause">暂停</button><button id="sound">声音 关</button><button id="reset">重置</button></nav>
   </header>
   <section class="battlefield" aria-label="雪林营地">
     <canvas id="field" aria-label="可移动、建造和持续修理的营地地图"></canvas>
-    <div class="scene-caption"><span>FROSTWOOD CAMP</span><b>林间营地</b><small id="status">入口畅通</small></div>
+    <div class="scene-caption"><span>SNOWFOREST CAMP</span><b>林间营地</b><small id="status">入口畅通</small></div>
     <aside class="trial"><span id="test-status">准备阶段</span><b id="growth"></b><div id="trial-controls"><button id="assault">巨魔攻墙</button><button id="return-shop">回店</button><button id="stop-test" aria-label="停止攻墙测试">停止试炼</button></div><small id="troll-resources">巨魔 50 金 / 0 木</small><small id="troll-combat">攻击 9 · 护甲 0 · 生命 500</small></aside>
     <div class="game-menu"><button id="open-catalog">建筑目录 B</button><button id="open-economy">经济 / 雇佣</button><button id="open-skills">技能书</button><button id="open-shop">巨魔商店</button></div>
     <div class="quick-skills"><button data-skill="root">缠绕 E</button><button data-skill="shield">护盾 Z</button><button data-skill="silence">沉默 W</button><span id="skill-readout"></span></div>

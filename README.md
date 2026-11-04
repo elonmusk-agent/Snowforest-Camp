@@ -1,4 +1,4 @@
-# Troll vs. Elves · 雪林防线
+# Snowforest Camp · 雪林营地
 
 一款正在开发的单机网页塔防游戏，参考 Warcraft III RPG 地图 **Troll vs. Elves v4.7 B5.5** 的建家、防守与经济成长机制，使用原创雪林场景和角色素材。
 
@@ -6,17 +6,17 @@
 
 **当前版本：单精灵、单巨魔、固定建筑基座。刷新页面或点击重置会清空本局，尚未实现存档和多人联机。**
 
-仓库：[jakiewan/Troll-vs-Elves](https://github.com/jakiewan/Troll-vs-Elves)
+仓库：[jakiewan/Snowforest-Camp](https://github.com/jakiewan/Snowforest-Camp)
 
-**公网试玩：[点击进入雪林防线](https://jakiewan.github.io/Troll-vs-Elves/)**。电脑可直接打开，手机请横屏。后续推送到 `master` 的游戏变更会通过 GitHub Actions 自动部署。
+**公网试玩：[点击进入雪林营地](https://jakiewan.github.io/Snowforest-Camp/)**。电脑可直接打开，手机请横屏。后续推送到 `master` 的游戏变更会通过 GitHub Actions 自动部署。
 
 ## 1. 下载并启动
 
 需要 **Python 3** 和现代浏览器。游戏使用 HTML、CSS、JavaScript 与 Canvas，启动时不需要安装 npm 依赖、数据库或后端服务。Node.js 仅用于运行模拟测试。
 
 ```bash
-git clone https://github.com/jakiewan/Troll-vs-Elves.git
-cd Troll-vs-Elves
+git clone https://github.com/jakiewan/Snowforest-Camp.git
+cd Snowforest-Camp
 python3 -m http.server 8765 --directory game --bind 127.0.0.1
 ```
 
@@ -170,7 +170,7 @@ python3 -m http.server 8765 --directory game --bind 0.0.0.0
 ## 7. 项目结构与验证
 
 ```text
-Troll-vs-Elves/
+Snowforest-Camp/
 ├── README.md                # 启动与玩法说明
 └── game/
     ├── index.html           # 页面、战场与操作面板
