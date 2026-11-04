@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a1820">
+  <title>Snowforest Camp · 多人雪林攻防</title>
+  <link rel="stylesheet" href="mp.css?v=mp1">
+</head>
+<body>
+  <!-- 大厅 -->
+  <div id="menu"><div class="panel">
+    <span class="eyebrow">SNOWFOREST CAMP · MULTIPLAYER</span>
+    <h1>雪林营地 · 巨魔与精灵</h1>
+    <p class="muted">1 名玩家扮演巨魔进攻，1–5 名玩家扮演精灵建家防守。大地图 10 处营地，战争迷雾，双方商店装备。</p>
+    <div class="menu-section">
+      <label class="muted">昵称</label>
+      <div class="row"><input type="text" id="nickname" maxlength="12" placeholder="旅人"></div>
+      <div class="row">
+        <button id="btn-create" class="primary">创建房间</button>
+        <div style="display:flex;gap:6px;flex:2">
+          <input type="text" id="join-code" maxlength="4" placeholder="房间码" style="text-transform:uppercase;flex:1">
+          <button id="btn-join" class="primary" style="flex:1">加入</button>
+        </div>
+      </div>
+      <p class="muted" id="menu-err" style="color:var(--red)"></p>
+    </div>
+    <div class="menu-section" id="lobby" style="display:none">
+      <b>房间 <span id="room-code" style="color:var(--amber);letter-spacing:2px"></span></b>
+      <p class="muted">邀请链接：<span id="invite"></span></p>
+      <div id="player-list"></div>
+      <div class="row" style="margin-top:12px">
+        <button id="btn-fac-elf">精灵阵营</button>
+        <button id="btn-fac-troll">巨魔阵营（1 名）</button>
+        <button id="btn-ready">准备</button>
+      </div>
+      <div class="row">
+        <button id="btn-start" class="primary">开始对局（房主）</button>
+        <button id="btn-leave" class="danger">退出房间</button>
+      </div>
+      <p class="muted">精灵流程：找营地 → 占领 → 建房产金 → 窄口筑墙 → 塔与技能防守。巨魔流程：准备期后入场 → 沿路侦察 → 攻墙赚钱 → 回补给区买装备。</p>
+    </div>
+    <p class="muted" style="margin-top:14px"><a href="index.html" style="color:var(--teal)">返回单机版</a> · 服务器状态见 /healthz</p>
+  </div></div>
+
+  <!-- 对局 -->
+  <div id="game">
+    <canvas id="field"></canvas>
+    <div class="topbar">
+      <span id="phase-pill">准备期 90s</span>
+      <span class="res"><span>金币 <b id="res-gold">30</b></span><span>木材 <b id="res-wood">0</b></span><span class="muted" id="res-rate"></span></span>
+      <span class="spacer"></span>
+      <span id="net-pill">连接中…</span>
+      <button id="btn-shop">商店 B</button>
+      <button id="btn-settings">⚙</button>
+    </div>
+    <div id="toast"></div>
+    <div id="settings">
+      <label>音效 <input type="checkbox" id="opt-sound"></label>
+      <label>镜头震动 <input type="checkbox" id="opt-shake" checked></label>
+      <label>画质-雪花 <select id="opt-snow"><option value="1">多</option><option value="0.5" selected>中</option><option value="0.25">少</option></select></label>
+      <label class="muted">快捷键：1 建屋 · 2 建墙 · 3 建塔 · 4 采木 · Q 闪烁 · E 缠绕 · Z 护盾 · W 沉默 · V 守卫 · R 修理 · U 升级 · A 攻击(巨魔) · 空格 定位</label>
+    </div>
+    <div id="shop">
+      <h3 id="shop-title">商店</h3>
+      <div class="muted">背包（点击出售/使用）</div>
+      <div class="bag" id="bag"></div>
+      <div class="muted">可购商品</div>
+      <div id="shop-list"></div>
+    </div>
+    <div class="bottombar">
+      <div id="minimap-wrap"><canvas id="minimap" width="224" height="126"></canvas></div>
+      <div id="cmdpanel"></div>
+      <div id="selpanel">
+        <b id="sel-name">旅人</b>
+        <div class="hp"><i id="sel-hp"></i></div>
+        <small id="sel-detail">点击地面移动 · 点击基座建造</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结算 -->
+  <div class="overlay" id="result-ov"><div class="panel">
+    <span class="eyebrow" style="color:var(--teal);letter-spacing:3px">FROSTWOOD · BATTLE REPORT</span>
+    <h1 id="result-title"></h1>
+    <p class="muted" id="result-detail"></p>
+    <div class="row"><button id="btn-again" class="primary">再来一局</button><button id="btn-exit">返回大厅</button></div>
+  </div></div>
+  <!-- 断线 -->
+  <div class="overlay" id="dc-ov"><div class="panel">
+    <h1>连接断开</h1>
+    <p class="muted" id="dc-reason"></p>
+    <p>自动重连（保留身份 <span id="reconnect-left">120</span> 秒）</p>
+    <div class="row"><button id="btn-retry" class="primary">立即重连</button><button id="btn-dc-exit">返回大厅</button></div>
+  </div></div>
+
+  <script type="module" src="mp-client.mjs?v=mp1"></script>
+</body>
+</html>
