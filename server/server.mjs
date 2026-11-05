@@ -54,6 +54,7 @@ class Room {
   }
   reclaim(seat) {
     seat.connected = true; seat.disconnectedAt = null;
+    seat.lastSeq = 0; // 重连是新会话:重置命令序号基线,避免新会话命令被当作重复而静默丢弃
     if (this.match) this.match.players[seat.pid].connected = true;
     return seat;
   }

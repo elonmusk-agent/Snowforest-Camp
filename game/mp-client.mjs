@@ -7,7 +7,7 @@ const qs = new URLSearchParams(location.search);
 // 服务器地址：?server=wss://… 优先，其次同源；本地文件打开时回退本机端口
 const serverUrl = qs.get('server') ?? ((location.protocol === 'https:' ? 'wss://' : location.protocol === 'http:' ? 'ws://' : 'ws://127.0.0.1:8080') + location.host);
 
-let ws = null, myToken = sessionStorage.getItem('sf_token') ?? '', myPid = null, roomCode = qs.get('room') ?? '', myName = sessionStorage.getItem('sf_name') ?? '', myFaction = null;
+let ws = null, myToken = sessionStorage.getItem('sf_token') ?? '', myPid = null, roomCode = qs.get('room') ?? sessionStorage.getItem('sf_room') ?? '', myName = sessionStorage.getItem('sf_name') ?? '', myFaction = null;
 let itemDb = {}, shops = { elf: [], troll: [] };
 let seq = 0, ping = 0, lastPong = 0, alive = false;
 const cmd = (action, ...args) => {
@@ -56,7 +56,16 @@ function connect(isReconnect = false) {
   };
   ws.onerror = () => { };
 }
+let autoTimer = null;
+function startAutoReconnect() {
+  if (autoTimer) return;
+  autoTimer = setInterval(() => {
+    if (alive || !myToken || !roomCode) { clearInterval(autoTimer); autoTimer = null; return; }
+    try { connect(true); } catch { }
+  }, 3000);
+}
 function markDead() {
+  startAutoReconnect();
   if (!alive && inGame) {
     $('dc-ov').classList.add('on');
     let left = 120;
@@ -80,7 +89,7 @@ function handleMsg(m) {
   switch (m.type) {
     case 'welcome': {
       myPid = m.you.pid; myToken = m.you.token; myName = m.you.name;
-      sessionStorage.setItem('sf_token', myToken); sessionStorage.setItem('sf_name', myName);
+      sessionStorage.setItem('sf_token', myToken); sessionStorage.setItem('sf_name', myName); sessionStorage.setItem('sf_room', m.code);
       itemDb = m.itemDb; shops = m.shops; roomCode = m.code;
       $('menu').style.display = 'flex'; $('game').classList.remove('on'); $('result-ov').classList.remove('on'); $('dc-ov').classList.remove('on');
       $('lobby').style.display = 'block';
@@ -426,8 +435,23 @@ function mapClick(p) {
 addEventListener('keydown', e => {
   if (!inGame || e.repeat) return;
   const k = e.key.toLowerCase();
-  const builds = { '1': 'house', '2': 'wall', '3': 'tower', '4': 'grove' };
-  if (builds[k] && snap?.you.faction === 'elf') { mode = 'build:' + builds[k]; toast('选择基座位置点击建造'); }
+  const builds = { '1': 'house', '2': 'wall', '3': 'tower', '4': 'grove', '5': 'tech', '6': 'mine', '7': 'guild' };
+  if (builds[k] && snap?.you.faction === 'elf') {
+    const type = builds[k], myCamp = snap.camps.find(c => c.claimedBy === snap.you.pid);
+    if (myCamp) {
+      // 固定基座直建:与按钮直建同一逻辑
+      const camp = CAMPS.find(c => c.id === myCamp.id);
+      const slots = type === 'wall' ? [camp.slots.gate] : type === 'tower' ? camp.slots.tower : [camp.slots[type]];
+      const free2 = slots.find(sl => !snap.buildings.some(b2 => b2.hp > 0 && Math.hypot(b2.x - sl.x, b2.y - sl.y) < 30));
+      if (free2) cmd('build', type, free2.x, free2.y);
+      else toast('该类型基座已被占用或正在施工');
+    } else { mode = 'build:' + type; toast('先占领营地,或点击地图基座'); }
+  }
+  else if (k === 'c' && snap?.you.faction === 'elf') cmd('claim');
+  else if (k === 'r' && snap?.you.faction === 'elf') {
+    const wall = snap.buildings.find(b => b.owner === snap.you.pid && b.type === 'wall' && b.hp > 0 && b.progress === 1);
+    if (wall) cmd('repair', wall.id); else toast('没有已建成的主墙可修理');
+  }
   else if (k === 'q' && snap?.you.faction === 'elf') mode = 'blink';
   else if (k === 'e') mode = 'skill:root';
   else if (k === 'z') mode = 'skill:shield';
@@ -439,6 +463,18 @@ addEventListener('keydown', e => {
   else if (k === 'a' && snap?.you.faction === 'troll') { mode = 'attack'; toast('点击敌人建筑或精灵发动攻击'); }
   else if (k === ' ') { const me = smooth.get('you'); camera.x = me.tx - view.w / zoom / 2; camera.y = me.ty - view.h / zoom / 2; clampCam(); e.preventDefault(); }
   else if (k === 'escape') { mode = ''; $('shop').classList.remove('on'); }
+  else if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k) && snap) {
+    e.preventDefault();
+    const dx = k === 'arrowleft' ? -1 : k === 'arrowright' ? 1 : 0, dy = k === 'arrowup' ? -1 : k === 'arrowdown' ? 1 : 0;
+    cmd('move', snap.you.x + dx * 90, snap.you.y + dy * 90);
+  }
+  else if (k === 'g' && snap?.you.faction === 'troll') {
+    // 巨魔:攻击视野内最近的敌方建筑/精灵
+    const me = snap.you;
+    const target = snap.buildings.filter(b => b.hp > 0 && b.started)
+      .sort((a, b) => Math.hypot(a.x - me.x, a.y - me.y) - Math.hypot(b.x - me.x, b.y - me.y))[0];
+    if (target) { cmd('attack', target.id); toast('攻击 ' + target.type); } else toast('视野内没有可攻击目标');
+  }
   hud(snap);
 });
 
@@ -483,6 +519,15 @@ function hud(m) {
       else if (b.id === 'repair' && selected?.type === 'b') cmd('repair', selected.o.id);
       else if (b.id === 'shop') $('shop').classList.toggle('on');
       else if (b.id.startsWith('trollSkill:')) cmd('trollSkill', b.id.slice(11));
+      else if (b.id.startsWith('build:') && snap.you.camp) {
+        // 固定基座直建:点按钮即在自己营地该类型第一个空基座开工(地图点击模式仍保留)
+        const type = b.id.slice(6);
+        const camp = CAMPS.find(c => c.id === snap.you.camp);
+        const slots = type === 'wall' ? [camp.slots.gate] : type === 'tower' ? camp.slots.tower : [camp.slots[type]];
+        const free2 = slots.find(sl => !snap.buildings.some(b2 => b2.hp > 0 && Math.hypot(b2.x - sl.x, b2.y - sl.y) < 30));
+        if (free2) cmd('build', type, free2.x, free2.y);
+        else toast('该类型基座已被占用或正在施工');
+      }
       else mode = b.id === mode ? '' : b.id;
       hud(snap);
     });
