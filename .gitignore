@@ -25,3 +25,4 @@ outputs/
 .omo/
 QA_TEST_LOG.md
 game/preview-*.png
+node_modules/
